@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deforestation Comparison Result</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+<canvas id="forest3d"></canvas>
+
+<div class="page">
+
+  <header class="site-header">
+    <h1>Deforestation Comparison</h1>
+    <p class="slogan">Change Detection Result</p>
+  </header>
+
+  <main class="container">
+
+    <section class="card">
+      <h2>Comparison Output</h2>
+
+      <!-- IMAGE COMPARISON -->
+      <div class="preview-grid">
+
+        <div class="preview-box">
+          <p><strong>Image 1</strong></p>
+          <img src="{{ url_for('static', filename='uploads/' + image1_name) }}"
+               class="result-img">
+        </div>
+
+        <div class="preview-box">
+          <p><strong>Image 2</strong></p>
+          <img src="{{ url_for('static', filename='uploads/' + img2_name) }}"
+               class="result-img">
+        </div>
+
+      </div>
+
+      <hr>
+
+      <!-- RESULTS -->
+    <h3>Change Detection Result</h3>
+
+{% if change_status == "DEFORESTATION_INCREASED" %}
+  <div class="status-badge danger">
+    🚨 Deforestation Increased
+  </div>
+{% elif change_status == "FOREST_RECOVERY" %}
+  <div class="status-badge safe">
+    🌱 Forest Recovery Detected
+  </div>
+{% else %}
+  <div class="status-badge neutral">
+    ⚖️ No Significant Change
+  </div>
+{% endif %}
+
+<p class="status-text">
+  {{ message }}
+</p>
+
+
+      <br>
+      <a href="{{ url_for('compare_page') }}" class="btn ghost">Compare Again</a>
+    </section>
+
+  </main>
+
+</div>
+
+<!-- BACKGROUND ANIMATION -->
+<script>
+const canvas = document.getElementById("forest3d");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const particles = [];
+for (let i = 0; i < 180; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: Math.random() * 2 + 0.5,
+    speed: Math.random() * 0.6 + 0.2
+  });
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(100,255,150,0.25)";
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    p.y -= p.speed;
+    if (p.y < 0) {
+      p.y = canvas.height + Math.random() * 50;
+      p.x = Math.random() * canvas.width;
+    }
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+<!-- CHATBOT -->
+<div id="chatbotWrapper">
+  <div id="chatbotBox">
+    <header id="chatHeader">
+      <span>Forest Assistant 🌿</span>
+      <button id="endChatBtn">End</button>
+    </header>
+    <div id="chatMessages"></div>
+    <input id="chatInput" type="text" placeholder="Type your message...">
+  </div>
+  <button id="chatOpenBtn">💬</button>
+</div>
+
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+</body>
+</html>

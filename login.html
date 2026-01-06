@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AI Deforestation Detector - Login</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<style>
+/* LOGIN BOX STYLES */
+.login-box {
+    width: 380px;
+    margin: 50px auto;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(7px);
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+.login-box h2 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    color: #00ff88;
+}
+
+.login-box input {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+}
+
+.login-btn {
+    margin-top: 10px;
+    width: 94%;
+    padding: 12px;
+    font-size: 18px;
+    border: none;
+    background: #00cc66;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.login-btn:hover {
+    background: #00994d;
+}
+
+/* Register Button */
+.register-btn {
+    margin-top: 15px;
+    width: 94%;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #00ff88;
+    background: transparent;
+    color: #00ff88;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.register-btn:hover {
+    background: rgba(0, 255, 136, 0.2);
+}
+
+/* HEADER IMAGE */
+.header-img {
+    width: 100%;
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* TITLE + SLOGAN */
+.site-header {
+    text-align: center;
+    color: white;
+    margin-top: 10px;
+}
+
+.site-header h1 {
+    font-size: 32px;
+    margin: 5px 0;
+}
+
+.slogan {
+    font-size: 18px;
+    letter-spacing: 1px;
+    color: #00ff88;
+}
+
+/* Chatbot button fix */
+#chatOpenBtn {
+    right: 20px;
+    bottom: 20px;
+    position: fixed;
+}
+</style>
+</head>
+
+<body>
+
+<!-- 3D Background -->
+<canvas id="forest3d"></canvas>
+
+<!-- COLLEGE HEADER IMAGE -->
+<img src="{{ url_for('static', filename='college_header.png') }}" class="header-img">
+<p class="department-name">DEPARTMENT OF CSE-AIML</p>
+<!-- TITLE + SLOGAN -->
+<header class="site-header">
+  <h1>AI Deforestation Detector</h1>
+  <p class="slogan">SAY NO TO ILLEGAL DEFORESTATION</p>
+</header>
+
+<!-- LOGIN BOX -->
+<div class="login-box">
+    <h2>Login</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <p style="color: rgb(139, 139, 136);">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/login">
+        <input type="text" name="username" placeholder="Enter Username" required>
+        <input type="password" name="password" placeholder="Enter Password" required>
+        <button class="login-btn" type="submit">Login</button>
+    </form>
+
+    <!-- REGISTER BUTTON -->
+    <a href="/register">
+        <button class="register-btn">Register</button>
+    </a>
+</div>
+
+<!-- Chatbot -->
+<div id="chatbotWrapper">
+  <div id="chatbotBox">
+      <header id="chatHeader"><span>Forest Assistant 🌿</span><button id="endChatBtn">End</button></header>
+      <div id="chatMessages"></div>
+      <input id="chatInput" type="text" placeholder="Type your message..." autocomplete="off" />
+  </div>
+  <button id="chatOpenBtn">💬</button>
+</div>
+
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+<!-- 3D Floating Animation -->
+<script>
+const canvas = document.getElementById("forest3d");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const particles = [];
+for (let i = 0; i < 200; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: Math.random() * 2 + 0.5,
+    speed: Math.random() * 0.6 + 0.2
+  });
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(100,255,150,0.25)";
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    p.y -= p.speed;
+    if (p.y < 0) {
+      p.y = canvas.height + Math.random() * 50;
+      p.x = Math.random() * canvas.width;
+    }
+  });
+
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+</body>
+</html>

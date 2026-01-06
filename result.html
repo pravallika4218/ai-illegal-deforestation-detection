@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Result - Deforestation Detector</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  /* Make body have same dark theme as index.html */
+  body {
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #0d0f1a, #0a0c1f); /* black-blue gradient */
+    overflow-x: hidden;
+    color: white;
+  }
+
+  .page {
+    position: relative;
+    z-index: 5;
+    padding: 30px;
+  }
+
+  #forest3d {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    width: 100%;
+    height: 100%;
+  }
+</style>
+</head>
+<body>
+
+<!-- 3D WebGL Background -->
+<canvas id="forest3d"></canvas>
+
+<div class="page">
+
+<header class="site-header">
+  <div class="brand">
+    <h1>AI Deforestation Detector</h1>
+    <p class="slogan">SAY NO TO ILLEGAL DEFORESTATION</p>
+  </div>
+</header>
+
+<div class="container">
+  <header>
+    <h1>Result</h1>
+    <p class="subtitle">Prediction result</p>
+  </header>
+
+  <main>
+    <div class="card result-card">
+      <div class="left">
+        <img src="{{ url_for('prediction_file', filename=filename) }}" 
+             alt="uploaded image" 
+             class="result-image large-image"
+             loading="lazy">
+      </div>
+
+      <div class="right">
+        <h2 class="big-label">{{ label }}</h2>
+        {% if label == "Deforested" %}
+  <p class="area-text danger">
+    🚨 The area is <strong>Deforested</strong>. Immediate attention is required.
+  </p>
+{% else %}
+  <p class="area-text safe">
+    🌱 The area is <strong>Non-Deforested</strong>. Forest cover is intact.
+  </p>
+{% endif %}
+
+
+
+
+
+        
+
+        <div class="actions">
+          <a class="btn primary" 
+             href="{{ url_for('deforestation_map', filename=filename, outline_filename=outline_filename, label=label, confidence=confidence) }}">
+             View Deforestation Map
+          </a>
+          <a class="btn primary" href="{{ url_for('prediction_file', filename=filename) }}" download>Download Original</a>
+          <a class="btn ghost" href="{{ url_for('index') }}">Predict Another</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <small>Project &mdash; AI Deforestation Detection</small>
+  </footer>
+</div>
+
+
+
+<!-- 3D Background Script -->
+<script>
+const canvas = document.getElementById("forest3d");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const particles = [];
+for (let i = 0; i < 180; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    z: Math.random() * 2 + 0.2,
+    size: Math.random() * 2 + 0.4,
+    speed: Math.random() * 0.6 + 0.2
+  });
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(124, 58, 237, ${0.25 * p.z})`; // purple-blue particles
+    ctx.arc(p.x, p.y, p.size * p.z, 0, Math.PI * 2);
+    ctx.fill();
+    p.y -= p.speed * p.z;
+    if (p.y < 0) { p.y = canvas.height + Math.random() * 50; p.x = Math.random() * canvas.width; }
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+<!-- Chatbot -->
+<div id="chatbotWrapper">
+  <div id="chatbotBox">
+      <header id="chatHeader"><span>Forest Assistant 🌿</span><button id="endChatBtn">End</button></header>
+      <div id="chatMessages"></div>
+      <input id="chatInput" type="text" placeholder="Type your message..." autocomplete="off" />
+  </div>
+  <button id="chatOpenBtn">💬</button>
+</div>
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+</body>
+</html>

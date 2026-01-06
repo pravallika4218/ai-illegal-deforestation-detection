@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chatbot — AI Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="chat-wrap">
+    <div class="chat-panel">
+      <div class="chat-header">
+        <div class="header-title">AI Assistant</div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <label class="small" id="modeLabel">Light</label>
+          <button id="toggleTheme" class="btn-primary" style="background:#111827;padding:8px 10px">Dark</button>
+        </div>
+      </div>
+
+      <div id="messages" class="messages" aria-live="polite"></div>
+
+      <div class="chat-input">
+        <textarea id="input" placeholder="Type your message... (Shift+Enter for newline)"></textarea>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button id="sendBtn" class="btn-primary">Send</button>
+          <button id="exportBtn" class="btn-primary" style="background:#10b981">Export</button>
+        </div>
+      </div>
+
+      <div style="padding:10px 20px">
+        <div class="small">Quick replies</div>
+        <div class="quick-replies" id="quickReplies">
+          <button data-q="Describe your project." class="qr">Describe your project</button>
+          <button data-q="How can I improve my dataset?" class="qr">Improve dataset</button>
+          <button data-q="Explain model training steps." class="qr">Training steps</button>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side-panel">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-weight:700">Conversation</div>
+        <div style="display:flex;gap:8px">
+          <button id="clearBtn" class="btn-primary" style="background:#ef4444">Clear</button>
+        </div>
+      </div>
+
+      <div style="margin-top:10px" id="meta">
+        <div class="small">Status: <span id="statusText">idle</span></div>
+        <div class="small" style="margin-top:8px">Saved locally — will persist across page reloads.</div>
+      </div>
+
+    </aside>
+  </div>
+
+<script>
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const statusText = document.getElementById('statusText');
+const exportBtn = document.getElementById('exportBtn');
+const clearBtn = document.getElementById('clearBtn');
+const quickReplies = document.getElementById('quickReplies');
+const toggleTheme = document.getElementById('toggleTheme');
+const modeLabel = document.getElementById('modeLabel');
+
+let isDark = false;
+let history = JSON.parse(localStorage.getItem('chat_history') || '[]');
+
+function renderMessages() {
+  messagesEl.innerHTML = '';
+  history.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'msg ' + (m.role==='user' ? 'user' : 'bot');
+    div.innerHTML = '<div style="font-size:12px;opacity:0.75;margin-bottom:6px">'+(m.role==='user'?'You':'Assistant')+' • '+(new Date(m.ts).toLocaleTimeString())+'</div>'
+                  + '<div>' + (m.content.replaceAll('\\n','<br>')) + '</div>';
+    messagesEl.appendChild(div);
+  });
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addMessage(role, text) {
+  const m = { role, content: text, ts: Date.now() };
+  history.push(m); localStorage.setItem('chat_history', JSON.stringify(history));
+  renderMessages();
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if(!text) return;
+  addMessage('user', text);
+  inputEl.value = '';
+  statusText.textContent = 'typing...';
+  const typingId = 'typing-bubble';
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'msg bot';
+  typingDiv.id = typingId;
+  typingDiv.innerHTML = '<div class="small">Assistant • ...</div><div><em>Thinking…</em></div>';
+  messagesEl.appendChild(typingDiv);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+
+  try {
+    const resp = await fetch('/chat', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ message: text, history })
+    });
+    const data = await resp.json();
+    const t = document.getElementById(typingId);
+    if(t) t.remove();
+    if(resp.ok && data.reply) {
+      addMessage('bot', data.reply);
+      statusText.textContent = 'idle';
+    } else {
+      addMessage('bot', 'Error: ' + (data.error || 'Unknown error'));
+      statusText.textContent = 'error';
+    }
+  } catch(err) {
+    const t = document.getElementById(typingId); if(t) t.remove();
+    addMessage('bot', 'Network error: ' + err.message);
+    statusText.textContent = 'error';
+  }
+}
+
+sendBtn.addEventListener('click', sendMessage);
+inputEl.addEventListener('keydown', (e)=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendMessage(); } });
+
+exportBtn.addEventListener('click', () => {
+  const blob = new Blob([ JSON.stringify(history, null, 2) ], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'chat_history.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+
+clearBtn.addEventListener('click', () => {
+  if(!confirm('Clear conversation history?')) return;
+  history = []; localStorage.removeItem('chat_history'); renderMessages();
+});
+
+quickReplies.addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  inputEl.value = btn.dataset.q;
+  inputEl.focus();
+});
+
+toggleTheme.addEventListener('click', () => {
+  isDark = !isDark;
+  document.documentElement.style.setProperty('--bg', isDark ? '#0b1220' : '#f7f7fb');
+  document.body.style.background = isDark ? '#071126' : '';
+  document.querySelectorAll('.chat-panel, .side-panel').forEach(el => {
+    el.style.background = isDark ? '#0b1220' : '';
+    el.style.color = isDark ? '#e6eef8' : '';
+  });
+  toggleTheme.textContent = isDark ? 'Light' : 'Dark';
+  modeLabel.textContent = isDark ? 'Dark' : 'Light';
+});
+
+renderMessages();
+</script>
+<!-- ================= CHATBOT WIDGET ================= -->
+<div id="chatbotWrapper">
+  
+  <!-- Chatbot Window -->
+  <div id="chatbotBox">
+      <header id="chatHeader">
+          <span>Forest Assistant 🌿</span>
+          <button id="endChatBtn">End</button>
+      </header>
+
+      <div id="chatMessages"></div>
+
+      <input id="chatInput" type="text" placeholder="Type your message..." autocomplete="off" />
+  </div>
+
+  <!-- Floating Button -->
+  <button id="chatOpenBtn">💬</button>
+</div>
+
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+</body>
+</html>

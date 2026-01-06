@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Deforestation Detector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+  <!-- 3D WebGL Background (Forest Particles) -->
+  <canvas id="forest3d"></canvas>
+
+  <div class="page">
+
+    <header class="site-header">
+      <div class="brand">
+        <h1>AI Deforestation Detector</h1>
+        <p class="slogan">SAY NO TO ILLEGAL DEFORESTATION</p>
+      </div>
+    </header>
+
+    <main class="main container">
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-area">
+          {% for category, msg in messages %}
+            <div class="flash {{ category }}">{{ msg }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% endwith %}
+
+      <section class="card uploader">
+        <h2>Upload a satellite patch</h2>
+        <p class="muted">Preferred: 150×150 RGB. Formats: PNG, JPG, JPEG.</p>
+
+        <form method="post" enctype="multipart/form-data">
+          <label class="file-label">
+            <input type="file" name="file" id="fileInput" accept="image/*" required>
+            <span id="fileLabelText">Choose an image</span>
+          </label>
+
+          <div class="controls">
+            <button type="submit" class="btn primary" id="predictBtn">Predict</button>
+            <a href="{{ url_for('view_log') }}" class="btn ghost">View Log</a>
+            <a href="{{ url_for('compare_page') }}" class="btn ghost">
+    Compare Two Images
+</a>
+
+          </div>
+        </form>
+      </section>
+
+      <aside class="card result-preview">
+        <h3>Latest Upload</h3>
+        <img id="preview" class="preview" src="" />
+      </aside>
+
+    </main>
+
+   
+  </div>
+
+  <!-- WebGL Forest Animation -->
+  <script>
+    const canvas = document.getElementById("forest3d");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener("resize", resizeCanvas);
+
+    const particles = [];
+    for (let i = 0; i < 180; i++) {
+      particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        z: Math.random() * 2 + 0.2,
+        size: Math.random() * 2 + 0.4,
+        speed: Math.random() * 0.6 + 0.2
+      });
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(123,255,123,${0.25 * p.z})`;
+        ctx.arc(p.x, p.y, p.size * p.z, 0, Math.PI * 2);
+        ctx.fill();
+
+        p.y -= p.speed * p.z;
+        if (p.y < 0) {
+          p.y = canvas.height + Math.random() * 50;
+          p.x = Math.random() * canvas.width;
+        }
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    // preview
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const label = document.getElementById("fileLabelText");
+
+    fileInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = "block";
+        label.textContent = file.name;
+      }
+    });
+  </script>
+  <!-- ================= CHATBOT WIDGET ================= -->
+<div id="chatbotWrapper">
+  
+  <!-- Chatbot Window -->
+  <div id="chatbotBox">
+      <header id="chatHeader">
+          <span>Forest Assistant 🌿</span>
+          <button id="endChatBtn">End</button>
+      </header>
+
+      <div id="chatMessages"></div>
+
+      <input id="chatInput" type="text" placeholder="Type your message..." autocomplete="off" />
+  </div>
+
+  <!-- Floating Button -->
+  <button id="chatOpenBtn">💬</button>
+</div>
+
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+
+
+</body>
+</html>

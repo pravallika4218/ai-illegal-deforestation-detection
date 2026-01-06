@@ -1,0 +1,154 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Register - AI Deforestation Detector</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+<style>
+.register-box {
+    width: 300px;
+    margin: 50px auto;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(7px);
+    padding: 5px;
+    border-radius: 10px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+.register-box h2 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    color: #00ff88;
+}
+
+.register-box input {
+    width: 90%;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    outline: none;
+}
+
+.register-btn {
+    margin-top: 10px;
+    width: 94%;
+    padding: 12px;
+    font-size: 18px;
+    border: none;
+    background: #00cc66;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.register-btn:hover {
+    background: #00994d;
+}
+
+.header-img {
+    width: 100%;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.site-header {
+    text-align: center;
+    color: white;
+    margin-top: 10px;
+}
+.slogan {
+    color: #00ff88;
+    font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Background -->
+<canvas id="forest3d"></canvas>
+
+<!-- College Header -->
+<img src="{{ url_for('static', filename='college_header.png') }}" class="header-img">
+
+<header class="site-header">
+  <h1>AI Deforestation Detector</h1>
+  <p class="slogan">SAY NO TO ILLEGAL DEFORESTATION</p>
+</header>
+
+<!-- Register Box -->
+<div class="register-box">
+    <h2>Create Account</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <p style="color: rgb(255, 200, 200);">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="/register">
+        <input type="text" name="username" placeholder="Create Username" required>
+        <input type="password" name="password" placeholder="Create Password" required>
+        <input type="password" name="confirm" placeholder="Confirm Password" required>
+
+        <button class="register-btn" type="submit">Register</button>
+    </form>
+
+    <p style="margin-top:5px;">
+        Already have an account?  
+        <a href="/login" style="color:#00ff88;">Login</a>
+    </p>
+</div>
+
+<!-- Background animation -->
+<script>
+const canvas = document.getElementById("forest3d");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const particles = [];
+for (let i = 0; i < 200; i++) {
+  particles.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    size: Math.random() * 2 + 0.5,
+    speed: Math.random() * 0.6 + 0.2
+  });
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.fillStyle = "rgba(100,255,150,0.25)";
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    p.y -= p.speed;
+    if (p.y < 0) {
+      p.y = canvas.height + Math.random() * 50;
+      p.x = Math.random() * canvas.width;
+    }
+  });
+
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Deforestation Map - Deforestation Detector</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<!-- 3D WebGL Background -->
+<canvas id="forest3d"></canvas>
+
+<header class="site-header">
+  <div class="brand">
+    <h1>AI Deforestation Detector</h1>
+    <p class="slogan">SAY NO TO ILLEGAL DEFORESTATION</p>
+  </div>
+</header>
+
+<div class="container">
+  <header>
+    <h1>Deforestation Map</h1>
+    <p class="subtitle">Input vs Deforestation Outline</p>
+  </header>
+
+  <main>
+    <div class="card result-card">
+      <div class="left">
+        <img src="{{ url_for('prediction_file', filename=filename) }}" alt="Input Image" class="result-image same-size" loading="lazy">
+        <p style="text-align:center; margin-top:6px;">Original Input</p>
+      </div>
+
+      <div class="right">
+        <img src="{{ url_for('prediction_file', filename=outline_filename) }}" alt="Deforestation Outline" class="result-image same-size" loading="lazy">
+        <p style="text-align:center; margin-top:6px;">Deforestation Outline</p>
+        <h2 class="big-label">{{ label }}</h2>
+        
+        <div class="actions">
+          <a class="btn primary" href="{{ url_for('prediction_file', filename=filename) }}" download>Download Input</a>
+          <a class="btn primary" href="{{ url_for('prediction_file', filename=outline_filename) }}" download>Download Outline</a>
+          <a class="btn ghost" href="{{ url_for('index') }}">Predict Another</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <small>Project &mdash; AI Deforestation Detection</small>
+  </footer>
+</div>
+
+<!-- Chatbot -->
+<div id="chatbotWrapper">
+  <div id="chatbotBox">
+      <header id="chatHeader"><span>Forest Assistant 🌿</span><button id="endChatBtn">End</button></header>
+      <div id="chatMessages"></div>
+      <input id="chatInput" type="text" placeholder="Type your message..." autocomplete="off" />
+  </div>
+  <button id="chatOpenBtn">💬</button>
+</div>
+<script src="{{ url_for('static', filename='chatbot.js') }}"></script>
+
+<!-- 3D Background Script -->
+<script>
+const canvas = document.getElementById("forest3d");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+const particles = [];
+for (let i = 0; i < 180; i++) {
+  particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, z: Math.random() * 2 + 0.2, size: Math.random() * 2 + 0.4, speed: Math.random() * 0.6 + 0.2 });
+}
+
+function animate() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(123,255,123,${0.25 * p.z})`;
+    ctx.arc(p.x, p.y, p.size * p.z, 0, Math.PI * 2);
+    ctx.fill();
+    p.y -= p.speed * p.z;
+    if (p.y < 0) { p.y = canvas.height + Math.random() * 50; p.x = Math.random() * canvas.width; }
+  });
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+
+<style>
+/* Force input and heatmap to same width */
+.result-image.same-size {
+  width: 320px;   /* same width for both */
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid rgba(189, 234, 8, 0.06);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+  display: block;
+  margin: 0 auto;
+}
+</style>
+
+</body>
+</html>
